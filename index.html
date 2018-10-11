@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8" />
+  <title>Events for the City of Santa Monica</title>
+
+  <style>
+    body {
+      font: 100% / 1.5 "Helvetica Neue", Helvetica, Arial, sans-serif;
+      padding: 3em 4.5em;
+      background: white;
+      color: black;
+    }
+    li {
+      margin-top: 3em;
+    }
+    img {
+      max-width: 100%;
+      height: auto;
+    }
+    .summary img {
+      width: 100%;
+    }
+    figure {
+      margin-left: 0;
+      margin-right: 0;
+    }
+    figcaption {
+      font-size: 0.75em;
+      font-style: italic;
+      opacity: 0.5;
+    }
+    summary {
+      margin-top: 1.5em;
+      margin-bottom: 1.5em;
+      display: block;
+      list-style: none;
+      cursor: pointer;
+    }
+    summary h2 {
+      text-decoration: underline;
+    }
+    details[open] summary h2 {
+      text-decoration: none;
+    }
+    details[open] .mask-behind-details {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      min-height: 100vh;
+      background: black;
+      background: rgba(0, 0, 0, 0.9);
+    }
+    details .summary {
+      border: 0.25em solid white;
+      padding: 1.25em;
+    }
+    details[open] .summary {
+      position: relative;
+      z-index: 99999;
+      color: white;
+      margin-bottom: 4.5em;
+    }
+    details[open] .summary::after {
+      content: "⬇︎";
+      display: block;
+      text-align: center;
+      font-size: 2em;
+      position: absolute;
+      width: 100%;
+      top: 100%;
+      left: 0;
+      top: calc(100% + 0.5em);
+    }
+    details summary::-webkit-details-marker,
+    details summary:focus::-webkit-details-marker {
+      display: none;
+    }
+    details {
+      display: block;
+    }
+    .details {
+      position: absolute;
+      left: 50%;
+      width: 100%;
+      max-width: 48em;
+      background: white;
+      color: black;
+      transform: translateX(-50%);
+      padding: 3em;
+      box-sizing: border-box;
+    }
+    ol, li {
+      list-style: none;
+      margin-left: 0;
+      padding-left: 0;
+    }
+    ol {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(21em, 1fr));
+      grid-gap: 3em 0;
+    }
+    .error .message,
+    .loading .message {
+      display: block !important;
+    }
+    .error .message {
+      color: red;
+    }
+  </style>
+
+</head>
+<body>
+
+<h1>Events for the City of Santa Monica</h1>
+<p role="status" class="message" style="display: none;"></p>
+<ol id="event-list"></ol>
+
+<script type="text/template" id="event-template">
+  <li>
+    <details>
+      <summary>
+        <div class="summary">
+          <h2><abbr aria-label="{{ weekday }}">{{ weekdayAbbreviation }}</abbr><br /><abbr aria-label="{{ month }}">{{ monthAbbreviation }}</abbr> {{ day }}</h2>
+          <p>{{ title }}</p>
+          <p>{{ time }}</p>
+          <p>{{ location }}</p>
+        </div>
+        <div class="mask-behind-details"></div>
+      </summary>
+      <div class="details">
+        <p>{{ description }}</p>
+
+        <p><a href="{{ url }}">Sign Up</a></p>
+
+        <h3>Categories</h3>
+        {{ categories }}
+
+        <h3>Ages</h3>
+        {{ ages }}
+      </div>
+    </details>
+  </li>
+</script>
+
+<script>
+(function() {
+
+  // Example requests for the City of Santa Monica events API
+
+  // Everything
+  // https://data.smgov.net/resource/tu9m-76aw.json
+
+  // Only locations and calendars
+  // https://data.smgov.net/resource/tu9m-76aw.json?$select=calendar,location&$order=calendar,location&$group=calendar,location
+
+  showLoadingMessage()
+  fetch('https://data.smgov.net/resource/tu9m-76aw.json')
+    .then(function(response) {
+      return response.json()
+    })
+    .then(function(myJson) {
+      addItems(myJson)
+      hideLoadingMessage()
+    })
+    .catch(function(error) {
+      console.error(error)
+      showErrorMessage()
+    })
+
+  function addItems(data) {
+    let list     = document.getElementById('event-list')
+    let template = document.getElementById('event-template')
+    if (data && list && template) {
+      for (let index = 0; index < data.length; index++) {
+        createItem(data[index], list, template)
+      }
+    }
+  }
+
+  function paddedZeros(number) {
+    return (number < 10) ? `0${number}` : number
+  }
+
+  // KUDOS: https://stackoverflow.com/questions/8888491/how-do-you-display-javascript-datetime-in-12-hour-am-pm-format
+  function getFormattedTime(date) {
+    let hours   = date.getHours()
+    let minutes = date.getMinutes()
+    let ampm    = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = (hours == 0) ? 12 : hours; // the hour '0' should be '12'
+    return `${hours}:${paddedZeros(minutes)} ${ampm}`
+  }
+
+  function createItem(itemData, list, template) {
+
+    const daysOfTheWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+
+    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+    let startDate = new Date(itemData.start_date)
+    let endDate   = new Date(itemData.end_date)
+
+    let startTime = getFormattedTime(startDate)
+    let endTime   = getFormattedTime(endDate)
+
+    let weekday     = daysOfTheWeek[startDate.getDay()]
+    let month       = monthNames[startDate.getMonth()]
+
+    let weekdayAbbreviation = weekday.substring(0, 3)
+    let monthAbbreviation   = month.substring(0, 3)
+
+    let day         = startDate.getDate();
+    let title       = itemData.title
+    let time        = (startDate.getHours() == 0) ? `All day` : (endTime) ? `${startTime} to ${endTime}` : startTime
+    let location    = itemData.location
+    // let address     = itemData.address_address
+    // let city        = itemData.address_city
+    // let state       = itemData.address_state
+    // let zip         = itemData.address_zip
+    let description = itemData.description
+    let categories  = itemData.event_types
+    let ages        = itemData.age_groups
+    let url         = itemData.signup_url
+
+    let html = template.innerHTML
+      .replace(/\{\{ weekday \}\}/g,     weekday)
+      .replace(/\{\{ month \}\}/g,       month)
+      .replace(/\{\{ weekdayAbbreviation \}\}/g, weekdayAbbreviation)
+      .replace(/\{\{ monthAbbreviation \}\}/g,   monthAbbreviation)
+      .replace(/\{\{ day \}\}/g,         day)
+      .replace(/\{\{ time \}\}/g,        time)
+      .replace(/\{\{ title \}\}/g,       title)
+      .replace(/\{\{ description \}\}/g, description)
+      .replace(/\{\{ location \}\}/g,    location)
+      .replace(/\{\{ categories \}\}/g,  categories)
+      .replace(/\{\{ ages \}\}/g,        ages)
+      .replace(/\{\{ url \}\}/g,         url)
+    list.insertAdjacentHTML('beforeend', html)
+  }
+  function showLoadingMessage() {
+    document.body.classList.add('loading');
+    document.querySelector('.message').textContent = 'Loading data…'
+  }
+  function showErrorMessage() {
+    document.body.classList.add('error');
+    document.querySelector('.message').textContent = 'An error occurred while loading the data.'
+  }
+  function hideLoadingMessage() {
+    document.body.classList.remove('loading');
+    document.querySelector('.message').textContent = 'The data has finished loading.'
+  }
+})();
+</script>
+
+</body>
+</html>
