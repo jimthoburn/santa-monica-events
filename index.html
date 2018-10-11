@@ -2,7 +2,7 @@
 <html lang="en" dir="ltr">
 <head>
   <meta charset="utf-8" />
-  <title>Events for the City of Santa Monica</title>
+  <title>Events for the City of Santa Monica in Palisades Park</title>
 
   <style>
     body {
@@ -113,7 +113,7 @@
 </head>
 <body>
 
-<h1>Events for the City of Santa Monica</h1>
+<h1>Events for the City of Santa Monica in Palisades Park</h1>
 <p role="status" class="message" style="display: none;"></p>
 <ol id="event-list"></ol>
 
@@ -156,7 +156,7 @@
   // https://data.smgov.net/resource/tu9m-76aw.json?$select=calendar,location&$order=calendar,location&$group=calendar,location
 
   showLoadingMessage()
-  fetch('https://data.smgov.net/resource/tu9m-76aw.json')
+  fetch('https://data.smgov.net/resource/tu9m-76aw.json?location=Palisades+Park')
     .then(function(response) {
       return response.json()
     })
@@ -173,6 +173,20 @@
     let list     = document.getElementById('event-list')
     let template = document.getElementById('event-template')
     if (data && list && template) {
+      data.sort(function(a, b) {
+        let aDate = new Date(a.start_date)
+        let bDate = new Date(b.start_date)
+        // a is less than b by some ordering criterion
+        if (aDate < bDate) {
+          return -1;
+        }
+        // a is greater than b by the ordering criterion
+        if (aDate > bDate) {
+          return 1;
+        }
+        // a must be equal to b
+        return 0;
+      })
       for (let index = 0; index < data.length; index++) {
         createItem(data[index], list, template)
       }
@@ -199,8 +213,8 @@
 
     const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
-    let startDate = new Date(itemData.start_date)
-    let endDate   = new Date(itemData.end_date)
+    let startDate = new Date(`${itemData.start_date}-07:00`)
+    let endDate   = new Date(`${itemData.end_date}-07:00`)
 
     let startTime = getFormattedTime(startDate)
     let endTime   = getFormattedTime(endDate)

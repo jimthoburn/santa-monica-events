@@ -16,6 +16,15 @@ The example is using client-side JavaScript to fetch the API data, and present i
 ### Only locations and calendars
 ```https://data.smgov.net/resource/tu9m-76aw.json?$select=calendar,location&$order=calendar,location&$group=calendar,location```
 
+### Events at the “Woodlawn Cemetery & Mausoleum”
+https://data.smgov.net/resource/tu9m-76aw.json?location=Woodlawn%20Cemetery%20%26%20Mausoleum
+
+### Events from the “parks” calendar
+https://data.smgov.net/resource/tu9m-76aw.json?calendar=parks
+
+### Events with a type of “Arts/Crafts, Class/Workshop, Discussion/Q&A”
+https://data.smgov.net/resource/tu9m-76aw.json?event_types=Arts%2FCrafts%2C%20Class%2FWorkshop%2C%20Discussion%2FQ%26A
+
 ## Example data
 The data that comes back from the API is a JSON object, which looks like this…
 
