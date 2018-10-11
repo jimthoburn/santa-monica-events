@@ -11,6 +11,16 @@
       background: white;
       color: black;
     }
+    a {
+      color: #0e76bb;
+    }
+    .action a {
+      display: inline-block;
+      background-color: #0e76bb;
+      color: white;
+      padding: 0.75em 1.5em;
+      border-radius: 0.25em;
+    }
     li {
       margin-top: 3em;
     }
@@ -130,15 +140,22 @@
         <div class="mask-behind-details"></div>
       </summary>
       <div class="details">
+        <h3>{{ title }}</h3>
+        <h4>{{ weekday }}, {{ month }} {{ day }}, {{ year }}</h4>
+        <p>{{ time }}</p>
         <p>{{ description }}</p>
 
-        <p><a href="{{ url }}">Sign Up</a></p>
+        <dl>
+          <dt>Location</dt>
+          <dd>{{ location }}</dd>
+          <dd>{{ address }}</dd>
+          <dt>Categories</dt>
+          <dd>{{ categories }}</dd>
+          <dt>Ages</dt>
+          <dd>{{ ages }}</dd>
+        </dl>
 
-        <h3>Categories</h3>
-        {{ categories }}
-
-        <h3>Ages</h3>
-        {{ ages }}
+        <p class="action"><a href="{{ url }}">Event details on {{ url_domain }}</a></p>
       </div>
     </details>
   </li>
@@ -225,11 +242,12 @@
     let weekdayAbbreviation = weekday.substring(0, 3)
     let monthAbbreviation   = month.substring(0, 3)
 
+    let year        = startDate.getFullYear();
     let day         = startDate.getDate();
     let title       = itemData.title
     let time        = (startDate.getHours() == 0) ? `All day` : (endTime) ? `${startTime} to ${endTime}` : startTime
     let location    = itemData.location
-    // let address     = itemData.address_address
+    let address     = itemData.address_address
     // let city        = itemData.address_city
     // let state       = itemData.address_state
     // let zip         = itemData.address_zip
@@ -237,10 +255,12 @@
     let categories  = itemData.event_types
     let ages        = itemData.age_groups
     let url         = itemData.signup_url
+    let url_domain  = url.split("/")[2]
 
     let html = template.innerHTML
       .replace(/\{\{ weekday \}\}/g,     weekday)
       .replace(/\{\{ month \}\}/g,       month)
+      .replace(/\{\{ year \}\}/g,        year)
       .replace(/\{\{ weekdayAbbreviation \}\}/g, weekdayAbbreviation)
       .replace(/\{\{ monthAbbreviation \}\}/g,   monthAbbreviation)
       .replace(/\{\{ day \}\}/g,         day)
@@ -248,9 +268,11 @@
       .replace(/\{\{ title \}\}/g,       title)
       .replace(/\{\{ description \}\}/g, description)
       .replace(/\{\{ location \}\}/g,    location)
+      .replace(/\{\{ address \}\}/g,    address)
       .replace(/\{\{ categories \}\}/g,  categories)
       .replace(/\{\{ ages \}\}/g,        ages)
       .replace(/\{\{ url \}\}/g,         url)
+      .replace(/\{\{ url_domain \}\}/g,  url_domain)
     list.insertAdjacentHTML('beforeend', html)
   }
   function showLoadingMessage() {
