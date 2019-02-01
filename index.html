@@ -2,7 +2,7 @@
 <html lang="en" dir="ltr">
 <head>
   <meta charset="utf-8" />
-  <title>Events for the City of Santa Monica in Palisades Park</title>
+  <title>Events for the Cultural Affairs Department at the City of Santa Monica</title>
 
   <style>
     body {
@@ -123,7 +123,7 @@
 </head>
 <body>
 
-<h1>Events for the City of Santa Monica in Palisades Park</h1>
+<h1>Events for the Cultural Affairs Department at the City of Santa Monica</h1>
 <p role="status" class="message" style="display: none;"></p>
 <ol id="event-list"></ol>
 
@@ -176,8 +176,74 @@
   // Only locations and calendars
   // https://data.smgov.net/resource/tu9m-76aw.json?$select=calendar,location&$order=calendar,location&$group=calendar,location
 
+  // Only the Palisades Park events
+  // https://data.smgov.net/resource/tu9m-76aw.json?location=Palisades+Park
+
+  const EVENT_TYPES = []
+  // const EVENT_TYPES = [
+  //   "Art Event",
+  //   "Arts/Crafts",
+  //   "Concerts/Dance",
+  //   "Festival/Celebration",
+  //   "Lecture/Panel",
+  //   "Movies/Film",
+  //   "Play/Performance Art"
+  // ]
+  
+  // const LOCATIONS = []
+  const LOCATIONS = [
+    "Miles Memorial Playhouse",
+    "Palisades Park",
+    "Annenberg Community Beach House"
+  ]
+  
+  const CONTACT_EMAILS = []
+  // const CONTACT_EMAILS = [
+  //   "culture@smgov.net",
+  //   "naomi.okuyama@smgov.net"
+  // ]
+
+  // https://data.smgov.net/resource/tu9m-76aw.json?$where=contact_name = 'culture@smgov.net' OR contact_name = 'naomi.okuyama@smgov.net'
+  //https://data.smgov.net/resource/tu9m-76aw.json?$where=contact_emails = 'culture@smgov.net' OR contact_emails = 'naomi.okuyama@smgov.net'
+  function getWhereClause(columnName, items) {
+    let asStrings = items.map(item => `'${item}'`)
+    return `${columnName} = ${asStrings.join(` OR ${columnName} = `)}`
+  }
+
+  let eventTypesWhereClause = getWhereClause(`event_types`,   EVENT_TYPES)
+  let contactEmailsClause   = getWhereClause(`contact_email`, CONTACT_EMAILS)
+  let locationsClause       = getWhereClause(`location`,      LOCATIONS)
+
+  let whereClause
+  
+  if (LOCATIONS.length > 0 && EVENT_TYPES.length > 0) {
+    whereClause = `${locationsClause} AND (${eventTypesWhereClause})`
+  } else if (CONTACT_EMAILS.length > 0) {
+    whereClause = contactEmailsClause
+  } else if (LOCATIONS.length > 0) {
+    whereClause = locationsClause
+  } else if (EVENT_TYPES.length > 0) {
+    whereClause = eventTypesWhereClause
+  }
+
+  let url
+
+  if (whereClause) {
+    url = `https://data.smgov.net/resource/tu9m-76aw.json?$where=${encodeURIComponent(whereClause)}`
+  } else {
+    url = `https://data.smgov.net/resource/tu9m-76aw.json`
+  }
+
+  // SHIM: Avoid showing unrelated events from Annenberg Community Beach House
+  function isCulturalAffairsEvent(event) {
+    return (event.location     !== "Annenberg Community Beach House" || 
+            event.contact_name === "Beach=Culture")
+  }
+
+  console.log(url)
+
   showLoadingMessage()
-  fetch('https://data.smgov.net/resource/tu9m-76aw.json?location=Palisades+Park')
+  fetch(url)
     .then(function(response) {
       return response.json()
     })
@@ -191,6 +257,10 @@
     })
 
   function addItems(data) {
+    // https://stackoverflow.com/questions/1960473/get-all-unique-values-in-a-javascript-array-remove-duplicates
+    let unique = [...new Set(data.map(item => item.location))]; 
+    console.dir(unique)
+    console.dir(data)
     let list     = document.getElementById('event-list')
     let template = document.getElementById('event-template')
     if (data && list && template) {
@@ -209,7 +279,9 @@
         return 0;
       })
       for (let index = 0; index < data.length; index++) {
-        createItem(data[index], list, template)
+        if (isCulturalAffairsEvent(data[index])) {
+          createItem(data[index], list, template)
+        }
       }
     }
   }

@@ -1,5 +1,5 @@
 # City of Santa Monica public API for events
-This is an example of how to use the events API from [data.smgov.net](https://data.smgov.net)
+This is an example of how to use the events API from [data.smgov.net](https://data.smgov.net/Public-Services/Calendar-Events/6aer-mv8t)
 
 * [Example page](https://jimthoburn.github.io/santa-monica-events/)
 * [Source code](https://github.com/jimthoburn/santa-monica-events/blob/master/index.html)
