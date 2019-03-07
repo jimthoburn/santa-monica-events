@@ -381,7 +381,17 @@
       .replace(/\{\{ ages \}\}/g,        ages)
       .replace(/\{\{ url \}\}/g,         url)
       .replace(/\{\{ url_domain \}\}/g,  url_domain)
-    list.insertAdjacentHTML('beforeend', html)
+
+    // https://stackoverflow.com/questions/6963311/add-days-to-a-date-object
+    const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
+    const THREE_DAYS = 3 * MILLISECONDS_PER_DAY;
+    let today = new Date();
+    let threeDaysAgo = new Date(today.setTime( today.getTime() - THREE_DAYS ));
+
+    // If the event is happening in the future or if it happened recently
+    if (startDate > threeDaysAgo) {
+      list.insertAdjacentHTML('beforeend', html)
+    }
   }
   function showLoadingMessage() {
     document.body.classList.add('loading');
